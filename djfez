@@ -21,6 +21,7 @@ if [ "$ACTION" = 'style' ] ; then
 
 else
     cat <<EOF
+usage:
 djfez style                      - list all styles
 EOF
 
