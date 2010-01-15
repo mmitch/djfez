@@ -1,0 +1,27 @@
+#!/bin/sh
+
+# remote for http://mixes.djfez.com
+
+# needs external tools:
+#  - lynx
+
+dumpurls()
+{
+    lynx -dump "$@" | cut -c 7- | grep ^http:
+}
+
+BASEURL=http://mixes.djfez.com/mixes/
+
+ACTION="$1"
+shift
+
+if [ "$ACTION" = 'style' ] ; then
+    # list all styles
+    dumpurls $BASEURL | egrep '^http://mixes.djfez.com/mixes/[^0-9].*/$' | sed -e "s,$BASEURL,," -e "s,/$,,"
+
+else
+    cat <<EOF
+djfez style                      - list all styles
+EOF
+
+fi
