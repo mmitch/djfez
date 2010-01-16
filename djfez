@@ -136,18 +136,31 @@ case "$ACTION" in
 	
 	for FILE in $STYLEDIR/????; do
 	    NUMBER=$(basename ${FILE})
-	    if [ -e "$DATADIR/$NUMBER.mp3" -o -f "${STYLEDIR}/${NUMBER}.mp3" ] ; then
-		echo skipping "#$NUMBER"
+	    if [ -e "${DATADIR}/${NUMBER}.mp3" ] ; then
+
+		if [ -e "${STYLEDIR}/${NUMBER}.mp3" ] ; then
+		    echo "skipping existing #$NUMBER"
+		else
+		    echo "adding symlink to #$NUMBER"
+		    ln -sf "../../$DATADIR/$NUMBER.mp3" "$STYLEDIR/$NUMBER.mp3"
+		fi
+
 	    else
-		URL="${DOWNLOADURL}${NUMBER}/"
-		TARGETFILE="$DATADIR/$NUMBER.mp3"
-		TMPFILE="$TARGETFILE.tmp"
-		echo -n "downloading #$NUMBER (${URL} => ${TARGETFILE})..."
-		wget -qcO"$TMPFILE" "${DOWNLOADURL}${NUMBER}/"
-		mv "$TMPFILE" "$TARGETFILE"
-		ln -sf "../../$DATADIR/$NUMBER.mp3" "$STYLEDIR/$NUMBER.mp3"
-		echo ok
-		sleep 60 # don't hammer their servers
+
+		if [ -e "${STYLEDIR}/${NUMBER}.mp3" ] ; then
+		    echo "skipping unwanted #$NUMBER"
+		else
+		    URL="${DOWNLOADURL}${NUMBER}/"
+		    TARGETFILE="$DATADIR/$NUMBER.mp3"
+		    TMPFILE="$TARGETFILE.tmp"
+		    echo -n "downloading #$NUMBER (${URL} => ${TARGETFILE})..."
+		    wget -qcO"$TMPFILE" "${DOWNLOADURL}${NUMBER}/"
+		    mv "$TMPFILE" "$TARGETFILE"
+		    ln -sf "../../$DATADIR/$NUMBER.mp3" "$STYLEDIR/$NUMBER.mp3"
+		    echo ok
+		    sleep 60 # don't hammer their servers
+		fi
+
 	    fi
 	done
 	;;
@@ -178,13 +191,16 @@ djfez upgrade <style>     - download missing songs of style <style>
    (restart "djfez upgrade <style"> to continue,
     run "djfez clean" to remove temporary files of interrupted downloads)
 
-4) listen to your music
-   if you don't like a song, empty the mp3 to not download it again
-   ("echo > 1234.mp3" or "rm 1234.mp3; touch 1234.mp3")
+4) listen to your music in the data directory
+   if you don't like a song, you have two options:
+   a) delete the .mp3 from the data directory.  if the song appears within
+      another style, it will be downloaded again.
+   b) emtpy the .mp3 file in the data directory (via "echo > 1234.mp3" or
+      "rm 1234.mp3; touch 1234.mp3").  this way the song will never be
+      downloaded again.
 
 5) after some time, restart at 2) to get new songs
 EOF
-	# todo: cleanup to kill .tmp files
 	;;
 
 esac
