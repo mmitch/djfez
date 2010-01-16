@@ -147,7 +147,7 @@ case "${ACTION}" in
 
 	    else
 
-		if [ -e "${STYLEDIR}/${NUMBER}.mp3" ] ; then
+		if [ -L "${STYLEDIR}/${NUMBER}.mp3" -o -e "${STYLEDIR}/${NUMBER}.mp3" ] ; then
 		    echo "skipping unwanted #${NUMBER}"
 		else
 		    URL="${DOWNLOADURL}${NUMBER}/"
