@@ -6,8 +6,59 @@
 #  - lynx
 
 dumpurls()
+# get URL list
 {
     lynx -dump "$@" | cut -c 7- | grep ^http:
+}
+
+abend()
+# end with error
+{
+    echo "$@" 1>&2
+    exit 1
+}
+
+parsePage()
+# recursively get song style listings
+{
+    local STYLE PAGE NEXTPAGE STATE
+    STYLE="$1"
+    PAGE=$2
+    NEXTPAGE=$(( $PAGE + 1 ))
+    STATE=0
+    
+    dumpurls "$BASEURL$STYLE/$PAGE/" | while read URL; do
+
+	case $STATE in
+	    0)
+		if [ "$URL" = "http://donate.djfez.com/" ] ; then
+		    STATE=1
+		fi
+		;;
+	    
+	    1)
+		if [[ "$URL" =~ ^$BASEURL[0-9][0-9][0-9][0-9]/$ ]] ; then
+		    echo $URL
+		    STATE=2
+		fi
+		;;
+
+	    2)
+		if [[ "$URL" =~ ^$BASEURL[0-9][0-9][0-9][0-9]/$ ]] ; then
+		    echo $URL
+		else
+		    if [ "$URL" = "$BASEURL$STYLE/$NEXTPAGE/" ] ; then
+			parsePage "$STYLE" $NEXTPAGE
+		    else
+			if [ "$URL" = "$BASEURL" ] ; then
+			    return
+			fi
+		    fi
+		fi
+		
+	esac
+	    
+    done
 }
 
 BASEURL=http://mixes.djfez.com/mixes/
@@ -15,14 +66,40 @@ BASEURL=http://mixes.djfez.com/mixes/
 ACTION="$1"
 shift
 
-if [ "$ACTION" = 'style' ] ; then
-    # list all styles
-    dumpurls $BASEURL | egrep '^http://mixes.djfez.com/mixes/[^0-9].*/$' | sed -e "s,$BASEURL,," -e "s,/$,,"
+case "$ACTION" in
 
-else
-    cat <<EOF
+    style)
+        # list all styles
+	dumpurls $BASEURL | egrep '^http://mixes.djfez.com/mixes/[^0-9].*/$' | sed -e "s,$BASEURL,," -e "s,/$,,"
+	
+	;;
+    
+    update)
+	# update song list of style <style>
+	STYLE="$1"
+	shift
+
+	if [ -z "$(echo $STYLE)" ] ; then
+	    abend no style given
+	fi
+
+	DIR=styles/"$STYLE"
+	mkdir -p "$DIR"
+	parsePage "$STYLE" 1 | while read LINE; do
+	    LINE=${LINE%/}
+	    NUMBER=${LINE##*/}
+	    touch "$DIR/$NUMBER"
+	done
+	
+	;;
+    
+    *)
+	# show help text
+	cat <<EOF
 usage:
 djfez style                      - list all styles
+djfez update <style>             - update song list of style <style>
 EOF
+	;;
 
-fi
+esac
