@@ -4,6 +4,12 @@
 
 # needs external tools:
 #  - lynx
+#  - wget
+#  - cat
+#  - cut
+#  - grep
+#  - mkdir
+#  - sed
 
 dumpurls()
 # get URL list
@@ -87,10 +93,23 @@ case "$ACTION" in
 
 	DIR=styles/"$STYLE"
 	mkdir -p "$DIR"
-	parsePage "$STYLE" 1 | while read LINE; do
-	    LINE=${LINE%/}
-	    NUMBER=${LINE##*/}
-	    touch "$DIR/$NUMBER"
+	parsePage "$STYLE" 1 | while read URL; do
+	    NUMBER=${URL%/}
+	    NUMBER=${NUMBER##*/}
+	    
+	    EXISTFILE="$DIR/$NUMBER"
+	    INFOFILE="${EXISTFILE}.info"
+
+	    touch "$EXISTFILE"
+
+	    if [ ! -e "$INFOFILE" ] ; then
+		lynx --dump --hiddenlinks=ignore --nolist "$URL" \
+		    | sed -n -e '/^Mixes/{:l1 p; n; b l1}' \
+		    | sed -n -e '/Link Link to this mix/q;p' \
+		    | (read; read; read; read; cut -c 4-) \
+		    > "$INFOFILE"
+	    fi
+
 	    echo -n .
 	done
 	echo
