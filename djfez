@@ -30,35 +30,35 @@ parsePage()
 # recursively get song style listings
 {
     local STYLE PAGE NEXTPAGE STATE
-    STYLE="$1"
-    PAGE=$2
-    NEXTPAGE=$(( $PAGE + 1 ))
+    STYLE="${1}"
+    PAGE=${2}
+    NEXTPAGE=$(( ${PAGE} + 1 ))
     STATE=0
     
-    dumpurls "$MIXESURL$STYLE/$PAGE/" | while read URL; do
+    dumpurls "${MIXESURL}${STYLE}/${PAGE}/" | while read URL; do
 
-	case $STATE in
+	case ${STATE} in
 	    0)
-		if [ "$URL" = "http://donate.djfez.com/" ] ; then
+		if [ "${URL}" = "http://donate.djfez.com/" ] ; then
 		    STATE=1
 		fi
 		;;
 	    
 	    1)
-		if [[ "$URL" =~ ^$MIXESURL[0-9][0-9][0-9][0-9]/$ ]] ; then
-		    echo $URL
+		if [[ "${URL}" =~ ^${MIXESURL}[0-9][0-9][0-9][0-9]/$ ]] ; then
+		    echo ${URL}
 		    STATE=2
 		fi
 		;;
 
 	    2)
-		if [[ "$URL" =~ ^$MIXESURL[0-9][0-9][0-9][0-9]/$ ]] ; then
-		    echo $URL
+		if [[ "${URL}" =~ ^${MIXESURL}[0-9][0-9][0-9][0-9]/$ ]] ; then
+		    echo ${URL}
 		else
-		    if [ "$URL" = "$MIXESURL$STYLE/$NEXTPAGE/" ] ; then
-			parsePage "$STYLE" $NEXTPAGE
+		    if [ "${URL}" = "${MIXESURL}${STYLE}/${NEXTPAGE}/" ] ; then
+			parsePage "${STYLE}" ${NEXTPAGE}
 		    else
-			if [ "$URL" = "$MIXESURL" ] ; then
+			if [ "${URL}" = "${MIXESURL}" ] ; then
 			    return
 			fi
 		    fi
@@ -73,44 +73,44 @@ BASEURL=http://mixes.djfez.com/
 MIXESURL=${BASEURL}mixes/
 DOWNLOADURL=${BASEURL}download/
 
-ACTION="$1"
+ACTION="${1}"
 shift
 
-case "$ACTION" in
+case "${ACTION}" in
 
     style)
         # list all styles
-	dumpurls $MIXESURL | egrep '^http://mixes.djfez.com/mixes/[^0-9].*/$' | sed -e "s,$MIXESURL,," -e "s,/$,,"
+	dumpurls ${MIXESURL} | egrep '^http://mixes.djfez.com/mixes/[^0-9].*/$' | sed -e "s,${MIXESURL},," -e "s,/$,,"
 	
 	;;
     
     update)
 	# update song list of style <style>
-	STYLE="$1"
+	STYLE="${1}"
 	shift
 
-	if [ -z "$(echo $STYLE)" ] ; then
+	if [ -z "$(echo ${STYLE})" ] ; then
 	    abend no style given
 	fi
 
-	STYLEDIR=styles/"$STYLE"
+	STYLEDIR=styles/"${STYLE}"
 	DATADIR=data
-	mkdir -p "$STYLEDIR" "$DATADIR"
-	parsePage "$STYLE" 1 | while read URL; do
+	mkdir -p "${STYLEDIR}" "${DATADIR}"
+	parsePage "${STYLE}" 1 | while read URL; do
 	    NUMBER=${URL%/}
 	    NUMBER=${NUMBER##*/}
 	    
-	    EXISTFILE="$STYLEDIR/$NUMBER"
+	    EXISTFILE="${STYLEDIR}/${NUMBER}"
 	    INFOFILE="${EXISTFILE}.info"
 
-	    touch "$EXISTFILE"
+	    touch "${EXISTFILE}"
 
-	    if [ ! -e "$INFOFILE" ] ; then
-		lynx --dump --hiddenlinks=ignore --nolist "$URL" \
+	    if [ ! -e "${INFOFILE}" ] ; then
+		lynx --dump --hiddenlinks=ignore --nolist "${URL}" \
 		    | sed -n -e '/^Mixes/{:l1 p; n; b l1}' \
 		    | sed -n -e '/Link Link to this mix/q;p' \
 		    | (read; read; read; read; cut -c 4-) \
-		    > "$INFOFILE"
+		    > "${INFOFILE}"
 	    fi
 
 	    echo -n .
@@ -121,42 +121,42 @@ case "$ACTION" in
 
     upgrade)
 	# download missing songs of style <style>
-	STYLE="$1"
+	STYLE="${1}"
 	shift
 
-	if [ -z "$(echo $STYLE)" ] ; then
+	if [ -z "$(echo ${STYLE})" ] ; then
 	    abend no style given
 	fi
 
 	set -e
-	STYLEDIR="styles/$STYLE"
+	STYLEDIR="styles/${STYLE}"
 	DATADIR="data"
 
 	mkdir -p "${STYLEDIR}" "${DATADIR}"
 	
-	for FILE in $STYLEDIR/????; do
+	for FILE in ${STYLEDIR}/????; do
 	    NUMBER=$(basename ${FILE})
 	    if [ -e "${DATADIR}/${NUMBER}.mp3" ] ; then
 
 		if [ -e "${STYLEDIR}/${NUMBER}.mp3" ] ; then
-		    echo "skipping existing #$NUMBER"
+		    echo "skipping existing #${NUMBER}"
 		else
-		    echo "adding symlink to #$NUMBER"
-		    ln -sf "../../$DATADIR/$NUMBER.mp3" "$STYLEDIR/$NUMBER.mp3"
+		    echo "adding symlink to #${NUMBER}"
+		    ln -sf "../../${DATADIR}/${NUMBER}.mp3" "${STYLEDIR}/${NUMBER}.mp3"
 		fi
 
 	    else
 
 		if [ -e "${STYLEDIR}/${NUMBER}.mp3" ] ; then
-		    echo "skipping unwanted #$NUMBER"
+		    echo "skipping unwanted #${NUMBER}"
 		else
 		    URL="${DOWNLOADURL}${NUMBER}/"
-		    TARGETFILE="$DATADIR/$NUMBER.mp3"
-		    TMPFILE="$TARGETFILE.tmp"
-		    echo -n "downloading #$NUMBER (${URL} => ${TARGETFILE})..."
-		    wget -qcO"$TMPFILE" "${DOWNLOADURL}${NUMBER}/"
-		    mv "$TMPFILE" "$TARGETFILE"
-		    ln -sf "../../$DATADIR/$NUMBER.mp3" "$STYLEDIR/$NUMBER.mp3"
+		    TARGETFILE="${DATADIR}/${NUMBER}.mp3"
+		    TMPFILE="${TARGETFILE}.tmp"
+		    echo -n "downloading #${NUMBER} (${URL} => ${TARGETFILE})..."
+		    wget -qcO"${TMPFILE}" "${DOWNLOADURL}${NUMBER}/"
+		    mv "${TMPFILE}" "${TARGETFILE}"
+		    ln -sf "../../${DATADIR}/${NUMBER}.mp3" "${STYLEDIR}/${NUMBER}.mp3"
 		    echo ok
 		    sleep 60 # don't hammer their servers
 		fi
