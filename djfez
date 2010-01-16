@@ -143,7 +143,7 @@ case "$ACTION" in
 		TARGETFILE="$DATADIR/$NUMBER.mp3"
 		TMPFILE="$TARGETFILE.tmp"
 		echo -n "downloading #$NUMBER (${URL} => ${TARGETFILE})..."
-		wget -qO"$TMPFILE" "${DOWNLOADURL}${NUMBER}/"
+		wget -qcO"$TMPFILE" "${DOWNLOADURL}${NUMBER}/"
 		mv "$TMPFILE" "$TARGETFILE"
 		ln -sf "../../$DATADIR/$NUMBER.mp3" "$STYLEDIR/$NUMBER.mp3"
 		echo ok
