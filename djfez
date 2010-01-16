@@ -123,14 +123,38 @@ case "$ACTION" in
 	    fi
 	done
 	;;
+
+    clean)
+	# remove interrupted downloads
+	echo "cleaning..."
+	find styles/ -type f -name \*.mp3.tmp -exec echo {} + -exec rm {} +
+	echo "ok"
+	;;
     
     *)
 	# show help text
 	cat <<EOF
 usage:
-djfez style                      - list all styles
-djfez update <style>             - update song list of style <style>
-djfez upgrade <style>            - download missing songs of style <style>
+djfez clean               - remove interrupted downloads    
+djfez style               - list all styles
+djfez update <style>      - update song list of style <style>
+djfez upgrade <style>     - download missing songs of style <style>
+
+
+1) run "djfez style"
+
+2) choose a style and run "djfez update <style>" for index date
+
+3) run "djfez upgrade <style>" to start download
+   this might take some time and can be interrupted any time
+   (restart "djfez upgrade <style"> to continue,
+    run "djfez clean" to remove temporary files of interrupted downloads)
+
+4) listen to your music
+   if you don't like a song, empty the mp3 to not download it again
+   ("echo > 1234.mp3" or "rm 1234.mp3; touch 1234.mp3")
+
+5) after some time, restart at 2) to get new songs
 EOF
 	# todo: cleanup to kill .tmp files
 	;;
