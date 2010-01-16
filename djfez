@@ -1,4 +1,6 @@
 #!/bin/sh
+#
+# vim: set noexpandtab tabstop=8 softtabstop=4 shiftwidth=4:
 
 # remote for http://mixes.djfez.com
 
@@ -91,13 +93,14 @@ case "$ACTION" in
 	    abend no style given
 	fi
 
-	DIR=styles/"$STYLE"
-	mkdir -p "$DIR"
+	STYLEDIR=styles/"$STYLE"
+	DATADIR=data
+	mkdir -p "$STYLEDIR" "$DATADIR"
 	parsePage "$STYLE" 1 | while read URL; do
 	    NUMBER=${URL%/}
 	    NUMBER=${NUMBER##*/}
 	    
-	    EXISTFILE="$DIR/$NUMBER"
+	    EXISTFILE="$STYLEDIR/$NUMBER"
 	    INFOFILE="${EXISTFILE}.info"
 
 	    touch "$EXISTFILE"
@@ -125,18 +128,24 @@ case "$ACTION" in
 	    abend no style given
 	fi
 
-	set +e
-	cd "styles/$STYLE"
+	set -e
+	STYLEDIR="styles/$STYLE"
+	DATADIR="data"
+
+	mkdir -p "${STYLEDIR}" "${DATADIR}"
 	
-	for NUMBER in ????; do
-	    if [ -e "$NUMBER.mp3" ] ; then
+	for FILE in $STYLEDIR/????; do
+	    NUMBER=$(basename ${FILE})
+	    if [ -e "$DATADIR/$NUMBER.mp3" -o -f "${STYLEDIR}/${NUMBER}.mp3" ] ; then
 		echo skipping "#$NUMBER"
 	    else
-		echo -n downloading "#$NUMBER"...
-		TARGETFILE="$NUMBER.mp3"
+		URL="${DOWNLOADURL}${NUMBER}/"
+		TARGETFILE="$DATADIR/$NUMBER.mp3"
 		TMPFILE="$TARGETFILE.tmp"
+		echo -n "downloading #$NUMBER (${URL} => ${TARGETFILE})..."
 		wget -qO"$TMPFILE" "${DOWNLOADURL}${NUMBER}/"
 		mv "$TMPFILE" "$TARGETFILE"
+		ln -sf "../../$DATADIR/$NUMBER.mp3" "$STYLEDIR/$NUMBER.mp3"
 		echo ok
 		sleep 60 # don't hammer their servers
 	    fi
@@ -146,7 +155,7 @@ case "$ACTION" in
     clean)
 	# remove interrupted downloads
 	echo "cleaning..."
-	find styles/ -type f -name \*.mp3.tmp -exec echo {} + -exec rm {} +
+	find data/ -type f -name \*.mp3.tmp -exec echo {} + -exec rm {} +
 	echo "ok"
 	;;
     
