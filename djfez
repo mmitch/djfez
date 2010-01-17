@@ -9,7 +9,9 @@
 #  - wget
 #  - cat
 #  - cut
+#  - find
 #  - grep
+#  - head
 #  - mkdir
 #  - sed
 
@@ -37,6 +39,15 @@ downloadSong()
     echo -n "downloading #${NUMBER} (${URL} => ${TARGETFILE})..."
     wget -qcO"${TMPFILE}" "${DOWNLOADURL}${NUMBER}/"
     mv "${TMPFILE}" "${TARGETFILE}"
+}
+
+printDescription()
+# download information about a single song
+{
+    lynx --dump --hiddenlinks=ignore --nolist "${1}" \
+	| sed -n -e '/^Mixes/{:l1 p; n; b l1}' \
+	| sed -n -e '/Link Link to this mix/q;p' \
+	| (read; read; read; read; cut -c 4-) \
 }
 
 parsePage()
@@ -120,11 +131,7 @@ case "${ACTION}" in
 	    touch "${EXISTFILE}"
 
 	    if [ ! -e "${INFOFILE}" ] ; then
-		lynx --dump --hiddenlinks=ignore --nolist "${URL}" \
-		    | sed -n -e '/^Mixes/{:l1 p; n; b l1}' \
-		    | sed -n -e '/Link Link to this mix/q;p' \
-		    | (read; read; read; read; cut -c 4-) \
-		    > "${INFOFILE}"
+		printDescription "${URL}" > "${INFOFILE}"
 	    fi
 
 	    echo -n .
@@ -174,7 +181,7 @@ case "${ACTION}" in
 	;;
 
     install)
-        # download a single song (ignoring prior deletions)
+        # force download of song <song>
 	NUMBER="${1}"
 	shift
 
@@ -186,6 +193,27 @@ case "${ACTION}" in
 	    downloadSong "${NUMBER}"
 	else
 	    abend song number not parseable
+	fi
+	;;
+
+    show)
+	# display information about song <song>
+	NUMBER="${1}"
+	shift
+
+	if [ -z "$(echo ${NUMBER})" ] ; then
+	    abend no number given
+	fi
+
+	if [[ ! "${NUMBER}" =~ ^[0-9][0-9][0-9][0-9]$ ]] ; then
+	    abend song number not parseable
+	fi
+
+	FOUND="$( find styles/ -type f -name "${NUMBER}.info" | head -n 1 )"
+	if [ "${FOUND}" ] ; then
+	    cat "${FOUND}"
+	else
+	    printDescription "${MIXESURL}${NUMBER}/"
 	fi
 	;;
 
@@ -202,7 +230,8 @@ case "${ACTION}" in
 usage:
 djfez clean               - remove interrupted downloads    
 djfez style               - list all styles
-djfez install <song>      - force download of a single song
+djfez install <song>      - force download of song <song>
+djfez show <song>         - display information about song <song>
 djfez update <style>      - update song list of style <style>
 djfez upgrade <style>     - download missing songs of style <style>
 
