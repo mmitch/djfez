@@ -14,6 +14,7 @@
 #  - head
 #  - mkdir
 #  - sed
+#  - stat
 
 dumpurls()
 # get URL list
@@ -201,6 +202,14 @@ case "${ACTION}" in
 	checkNumber
 
 	downloadSong "${NUMBER}"
+	FILE="${DATADIR}/${NUMBER}.mp3"
+	if [ $(stat -c%s "${FILE}") -lt 10000 ] ; then
+	    echo "NOK"
+	    rm "${FILE}"
+	    abend file too small, possible error, file deleted.
+	else
+	    echo "ok"
+	fi
 	;;
 
     show)
