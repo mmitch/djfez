@@ -93,6 +93,26 @@ parsePage()
     done
 }
 
+checkStyle()
+# check whether the STYLE argument is valid
+{
+    if [ -z "$(echo ${STYLE})" ] ; then
+	abend no style given
+    fi
+}
+
+checkNumber()
+# check whether the NUMBER argument is valid
+{
+    if [ -z "$(echo ${NUMBER})" ] ; then
+	abend no number given
+    fi
+    
+    if [[ ! "${NUMBER}" =~ ^[0-9][0-9][0-9][0-9]$ ]] ; then
+	abend number not parseable
+    fi
+}
+
 BASEURL=http://mixes.djfez.com/
 MIXESURL=${BASEURL}mixes/
 DOWNLOADURL=${BASEURL}download/
@@ -113,10 +133,7 @@ case "${ACTION}" in
 	# update song list of style <style>
 	STYLE="${1}"
 	shift
-
-	if [ -z "$(echo ${STYLE})" ] ; then
-	    abend no style given
-	fi
+	checkStyle
 
 	STYLEDIR=styles/"${STYLE}"
 	DATADIR=data
@@ -144,10 +161,7 @@ case "${ACTION}" in
 	# download missing songs of style <style>
 	STYLE="${1}"
 	shift
-
-	if [ -z "$(echo ${STYLE})" ] ; then
-	    abend no style given
-	fi
+	checkStyle
 
 	set -e
 	STYLEDIR="styles/${STYLE}"
@@ -184,30 +198,16 @@ case "${ACTION}" in
         # force download of song <song>
 	NUMBER="${1}"
 	shift
+	checkNumber
 
-	if [ -z "$(echo ${NUMBER})" ] ; then
-	    abend no number given
-	fi
-
-	if [[ "${NUMBER}" =~ ^[0-9][0-9][0-9][0-9]$ ]] ; then
-	    downloadSong "${NUMBER}"
-	else
-	    abend song number not parseable
-	fi
+	downloadSong "${NUMBER}"
 	;;
 
     show)
 	# display information about song <song>
 	NUMBER="${1}"
 	shift
-
-	if [ -z "$(echo ${NUMBER})" ] ; then
-	    abend no number given
-	fi
-
-	if [[ ! "${NUMBER}" =~ ^[0-9][0-9][0-9][0-9]$ ]] ; then
-	    abend song number not parseable
-	fi
+	checkNumber
 
 	FOUND="$( find styles/ -type f -name "${NUMBER}.info" | head -n 1 )"
 	if [ "${FOUND}" ] ; then
