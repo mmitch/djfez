@@ -35,10 +35,11 @@ downloadSong()
     local URL TARGETFILE TMPFILE NUMBER
     NUMBER="${1}"
     URL="${DOWNLOADURL}${NUMBER}/"
+    REFERER="${MIXESURL}${NUMBER}/"
     TARGETFILE="${DATADIR}/${NUMBER}.mp3"
     TMPFILE="${TARGETFILE}.tmp"
     echo -n "downloading #${NUMBER} (${URL} => ${TARGETFILE})..."
-    wget -qcO"${TMPFILE}" "${DOWNLOADURL}${NUMBER}/"
+    wget -qcO"${TMPFILE}" --referer="${REFERER}" "${URL}"
     mv "${TMPFILE}" "${TARGETFILE}"
 }
 
