@@ -55,44 +55,24 @@ printDescription()
 parsePage()
 # recursively get song style listings
 {
-    local STYLE PAGE NEXTPAGE STATE
+    local STYLE PAGE NEXTPAGE
     STYLE="${1}"
     PAGE=${2}
     NEXTPAGE=$(( ${PAGE} + 1 ))
-    STATE=0
     
     dumpurls "${MIXESURL}${STYLE}/${PAGE}/" | while read URL; do
 
-	case ${STATE} in
-	    0)
-		if [ "${URL}" = "http://donate.djfez.com/" ] ; then
-		    STATE=1
-		fi
-		;;
-	    
-	    1)
-		if [[ "${URL}" =~ ^${MIXESURL}[0-9][0-9][0-9][0-9]/$ ]] ; then
-		    echo ${URL}
-		    STATE=2
-		fi
-		;;
+	if [[ "${URL}" =~ ^${MIXESURL}[0-9][0-9][0-9][0-9]/$ ]] ; then
+	    echo ${URL}
+	fi
 
-	    2)
-		if [[ "${URL}" =~ ^${MIXESURL}[0-9][0-9][0-9][0-9]/$ ]] ; then
-		    echo ${URL}
-		else
-		    if [ "${URL}" = "${MIXESURL}${STYLE}/${NEXTPAGE}/" ] ; then
-			parsePage "${STYLE}" ${NEXTPAGE}
-		    else
-			if [ "${URL}" = "${MIXESURL}" ] ; then
-			    return
-			fi
-		    fi
-		fi
-		
-	esac
+	if [ "${URL}" = "${MIXESURL}${STYLE}/${NEXTPAGE}/" ] ; then
+	    parsePage "${STYLE}" ${NEXTPAGE}
+	    NEXTPAGE=%%%%%%
+	fi
 	    
     done
+
 }
 
 checkStyle()
@@ -140,7 +120,7 @@ case "${ACTION}" in
 	STYLEDIR=styles/"${STYLE}"
 	DATADIR=data
 	mkdir -p "${STYLEDIR}" "${DATADIR}"
-	parsePage "${STYLE}" 1 | while read URL; do
+	parsePage "${STYLE}" 1 | sort | uniq | while read URL; do
 	    NUMBER=${URL%/}
 	    NUMBER=${NUMBER##*/}
 	    
