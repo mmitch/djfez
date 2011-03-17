@@ -76,10 +76,13 @@ parsePage()
 }
 
 checkDir()
-# Check whether the data and style directory exist, and exit if not
+# check whether data and style directories exist
 {
-    if [ ! -d "data" -o ! -d "styles" ] ; then
-	abend Data directory or style directory does not exist here
+    if [ ! -d "data" ] ; then
+	abend no data directory found
+    fi
+    if [ ! -d "styles" ] ; then
+	abend no styles directory found
     fi
 }
 
