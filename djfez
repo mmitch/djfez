@@ -75,6 +75,14 @@ parsePage()
 
 }
 
+checkDir()
+# Check whether the data and style directory exist, and exit if not
+{
+    if [ ! -d "data" -o ! -d "styles" ] ; then
+	abend Data directory or style directory does not exist here
+    fi
+}
+
 checkStyle()
 # check whether the STYLE argument is valid
 {
@@ -143,6 +151,7 @@ case "${ACTION}" in
 	# download missing songs of style <style>
 	STYLE="${1}"
 	shift
+	checkDir
 	checkStyle
 
 	set -e
@@ -180,6 +189,7 @@ case "${ACTION}" in
         # force download of song <song>
 	NUMBER="${1}"
 	shift
+	checkDir
 	checkNumber
 
 	downloadSong "${NUMBER}"
@@ -197,6 +207,7 @@ case "${ACTION}" in
 	# display information about song <song>
 	NUMBER="${1}"
 	shift
+	checkDir
 	checkNumber
 
 	FOUND="$( find styles/ -type f -name "${NUMBER}.info" | head -n 1 )"
@@ -209,6 +220,7 @@ case "${ACTION}" in
 
     clean)
 	# remove interrupted downloads
+	checkDir
 	echo "cleaning..."
 	find data/ -type f -name \*.mp3.tmp -exec echo {} + -exec rm {} +
 	echo "ok"
